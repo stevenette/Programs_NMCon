@@ -1,0 +1,223 @@
+'CR1000 Series Datalogger
+'To create a different opening program template, type in new
+'instructions and select Template | Save as Default Template
+'date:
+'program author:
+
+'Declare Public Variables
+'Example:
+SequentialMode
+
+Public PTemp, batt_volt
+
+'Declare Other Variables
+'PIT 2  PURPLE DOUG FIR
+'PIT 1 RED OPEN
+'PIT 3 WHITE ASPEN
+
+Const HFP01_CAL_1 = 61.56    'unique multiplier for HFP01SC #1 (1000/sensitivity)
+Const HFP01_CAL_2 = 60.68 'unique multiplier for HFP01SC #2 (1000/sensitivity)
+Const HFP01_CAL_3 = 61.64'unique multiplier for HFP01SC #3 (1000/sensitivity)
+
+
+
+'*** AM16/32A Constants and Variables ***
+
+'Dim AM25T_dsble_flg_on_mux As Boolean
+Dim i
+Dim ii
+Dim iii
+Dim j
+
+Public panelT_1000
+Units panelT_1000 = C
+
+Public shf(3)
+Alias shf(1) = shf_pit_1
+Alias shf(2) = shf_pit_2
+Alias shf(3) = shf_pit_3
+
+
+Units shf = W/m^2
+Dim shf_cal(3)	'Soil heat flux plate calibration coefficients.
+Units shf_cal = W/(m^2 mV)
+
+
+Public Soil_CO2(12)
+Alias Soil_CO2(1)=Soil_CO2_1_5
+Alias Soil_CO2(2)=Soil_CO2_1_10
+Alias Soil_CO2(3)=Soil_CO2_1_30
+Alias Soil_CO2(4)=Soil_CO2_1_60
+Alias Soil_CO2(5)=Soil_CO2_2_5
+Alias Soil_CO2(6)=Soil_CO2_2_10
+Alias Soil_CO2(7)=Soil_CO2_2_30
+Alias Soil_CO2(8)=Soil_CO2_2_60
+Alias Soil_CO2(9)=Soil_CO2_3_5
+Alias Soil_CO2(10)=Soil_CO2_3_10
+Alias Soil_CO2(11)=Soil_CO2_3_30
+Alias Soil_CO2(12)=Soil_CO2_3_60
+
+
+Public SWC(12)
+Alias SWC (1) = SWC_1_5
+Alias SWC (2) = SWC_1_10
+Alias SWC (3) = SWC_1_30
+Alias SWC (4) = SWC_1_60
+Alias SWC (5) = SWC_2_5
+Alias SWC (6) = SWC_2_10
+Alias SWC (7) = SWC_2_30
+Alias SWC (8) = SWC_2_60
+Alias SWC (9) = SWC_3_5
+Alias SWC (10) = SWC_3_10
+Alias SWC (11) = SWC_3_30
+Alias SWC (12) = SWC_3_60
+
+
+Public T107(12)
+Alias T107 (1) = T107_1_5
+Alias T107 (2) = T107_1_10
+Alias T107 (3) = T107_1_30
+Alias T107 (4) = T107_1_60
+Alias T107 (5) = T107_2_5
+Alias T107 (6) = T107_2_10
+Alias T107 (7) = T107_2_30
+Alias T107 (8) = T107_2_60
+Alias T107 (9) = T107_3_5
+Alias T107 (10) = T107_3_10
+Alias T107 (11) = T107_3_30
+Alias T107 (12) = T107_3_60
+
+'Units SoilT = C
+
+
+Public mux_ref_temp
+Units mux_ref_temp = C
+
+Public TCAV(3)
+Alias TCAV(1)=TCAV_1
+Alias TCAV(2)=TCAV_2
+Alias TCAV(3)=TCAV_3
+
+Units TCAV=C
+
+Public NR_lite
+
+
+
+'Define Data Tables.
+DataTable (soil_data,TRUE,-1) 'Set table size to # of records, or -1 to autoallocate.
+  
+  DataInterval (0,30,Min,10)
+  CardOut (0,-1)
+ 
+	Average (12,SWC(1),IEEE4,FALSE)
+  Average (12,T107(1),IEEE4,FALSE)
+  Average (12,Soil_CO2(1),IEEE4,FALSE)
+
+  Average (3,shf(1),IEEE4,FALSE)  'Hukesflux plates 2/20/09
+  Average (3,TCAV(1),IEEE4,FALSE)   'sensors installed by Eric prior to burn, installed new ones 5/2011
+  Average (1, NR_lite,IEEE4,FALSE)  
+
+'think the order of grass/open switched between prior to burn and 5/2011       open/grass  5/2011
+
+EndTable
+
+
+
+'Main Program
+BeginProg
+
+
+	Scan (5,Min,3,0) 
+	  
+  Battery (batt_volt)
+
+	  
+  PanelTemp (panelT_1000,250)
+  
+'Load the HFT3 factory calibration.
+  shf_cal(1) = HFP01_CAL_1
+  shf_cal(2) = HFP01_CAL_2
+  shf_cal(3) = HFP01_CAL_3
+
+
+'Turn on the AM16/32.
+		PortSet (1,TRUE)
+		PortSet (3,TRUE)
+
+    ii = 1
+    iii = 1
+		'Clock both AM16/32As.
+		SubScan (0,mSec,6)
+  		PulsePort (2,10000)
+  		PulsePort (4,10000)
+  		Delay (0,20,mSec)
+     
+      CS616 (SWC(ii),1,1,5,1,1.0,0)
+      Therm107(T107(ii),1,3,Vx1,250,250,1,0) 
+    	VoltDiff (Soil_CO2(iii),1,mV5000,3,TRUE,450,250,10,0)
+  		PulsePort (4,10000)
+      VoltDiff (Soil_CO2(iii+1),1,mV5000,3,TRUE,450,250,10,0)
+		
+	     ii =ii + 1
+      iii =iii + 2
+    NextSubScan 
+		
+		
+		ii=7
+	  SubScan (0,mSec,10)
+  	  PulsePort (2,10000)
+  	  Delay (0,20,mSec)
+  	  CS616 (SWC(ii),1,1,5,1,1.0,0) 
+  	  Therm107(T107(ii),1,3,Vx1,200,250,1,0) 
+      
+	    ii = ii + 1
+    NextSubScan
+   
+    PortSet (1,FALSE)
+ 
+		
+		PulsePort (4,10000)
+		'Delay (1,20,mSec)
+		VoltDiff (shf(1),1,mV250,3,TRUE,200,250,shf_cal(1),0)
+		'pit 1
+		
+    PulsePort (4,10000)
+		'Delay (1,20,mSec)
+		VoltDiff (shf(2),1,mV250,3,TRUE,200,250,shf_cal(2),0)
+		'pit 2
+
+		PulsePort (4,10000)
+		'Delay (1,20,mSec)
+		VoltDiff (shf(3),1,mV250,3,TRUE,200,250,shf_cal(3),0)
+		'pit 3
+	
+   	PulsePort (4,10000)
+		'Delay (1,20,mSec)
+		TCDiff (TCAV(1),1,mV25,3,TypeE,panelT_1000,TRUE,200,250,1.0,0)
+		
+    PulsePort (4,10000)
+		'Delay (1,20,mSec)
+		TCDiff (TCAV(2),1,mV25,3,TypeE,panelT_1000,TRUE,200,250,1.0,0)
+		
+		PulsePort (4,10000)
+		'Delay (1,20,mSec)
+		TCDiff (TCAV(3),1,mV25,3,TypeE,panelT_1000,TRUE,200,250,1.0,0)
+		
+
+		
+    PulsePort (4,10000)
+		'Delay (1,20,mSec)
+    VoltDiff(NR_lite,1,mV250,3,True,0,250,68.9655,0)
+    
+    PortSet (3,FALSE)
+    
+
+		CallTable soil_data
+
+  NextScan
+
+
+	
+EndProg
+
