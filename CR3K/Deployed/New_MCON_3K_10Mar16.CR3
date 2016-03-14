@@ -985,8 +985,7 @@ BeginProg
 
     RH_Frac=RH(6)*0.01
     SatVP (e_sat,AirTC(6))
-    'e_KPa=e_sat*RH_Frac 
-    e_hmp_mean=e_sat*RH_Frac 
+    e_KPa=e_sat*RH_Frac 
     
 
 '    PulseCount(WS_ms(1),1,1,1,1,0.75,0.2)
