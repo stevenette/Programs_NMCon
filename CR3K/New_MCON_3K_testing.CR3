@@ -695,6 +695,7 @@ DataTable (flux,TRUE,FLUX_SIZE_CPU)
   Average (1,h2o_mm_m,IEEE4,(disable_flag_on(2))
   Average (1,rho_a_mean,IEEE4,disable_flag_on(2))
   Average (1,press,IEEE4,disable_flag_on(2))
+  Average (10,irga2_raw(1),IEEE4,(disable_flag_on(2))
 
   Sample (1,wnd_dir_compass,IEEE4)
   Sample (1,wnd_dir_csat3,IEEE4)
