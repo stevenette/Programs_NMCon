@@ -419,16 +419,16 @@ Units par = umolm2s
 
 
 Public WS_ms(3)
-Alias WS_ms(1)=WS_ms_8p75
-Alias WS_ms(2)=WS_ms_16
-Alias WS_ms(3)=WS_ms_24
+Alias WS_ms(1)=WS_ms_4p5
+Alias WS_ms(2)=WS_ms_8p75
+Alias WS_ms(3)=WS_ms_16
 
 
 
 Public WindDir(3)
-Alias WindDir(1)=WindDir_8p75
-Alias WindDir(2)=WindDir_16
-Alias WindDir(3)=WindDir_24
+Alias WindDir(1)=WindDir_4p5
+Alias WindDir(2)=WindDir_8p75
+Alias WindDir(3)=WindDir_16
 Units WS_ms=m/s
 Units WindDir=Degrees
 
