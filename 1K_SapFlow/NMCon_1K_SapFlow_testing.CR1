@@ -1,0 +1,203 @@
+'CR1000 Series Datalogger - NMCON_Valles Caldera_Sapflow - YEAR 2015 - Granier installations
+
+'attached devices
+' 1 AM25T mux
+'			one for air and soil temperature (not used in this program & site)
+' 2 AM16/32 mux
+'     first MUX1 for Granier probes, set in 2X32 mode
+'     second MUX2 for Granier probes, set in 2x32 mode
+
+'program to make the following measurements:
+'  48 heat dissipation sap flow probes (GRANIER sensors-48 diff channels) on first and second AM16/32 mux
+'    32 are measured on MUX1
+'    16 are measured on Mux2
+
+'Diff Channel 1 - for AM16/32 (MUX1) differential voltage measurements of Granier sensors(diff 1-32)
+'Diff Channel 2 - for AM16/32 (MUX2) differential voltage measurements of Granier sensors(diff 1-16)
+'Diff Channel 3 - for solar/battery array voltage (measured at the 24 to 14 volt step down converter @ the input terminal lug) 
+'Control port 1 - AM16/32 (MUX1) clock for Granier probes
+'Control port 2 - AM16/32 (MUX1) reset for Granier probes
+'Control port 3 - AM16/32 (MUX2) clock for Granier probes 
+'Control port 4 - AM16/32 (MUX2) reset for Granier probes 
+
+
+'Declare Public Variables
+
+'declare standard variables
+Public PTemp
+Public batt_volt     'Battery voltage of 1000 datalogger
+Public converter24_12V 'Incoming voltage from 24 to 12V converter
+Public battbank      'Voltage of battery bank at solar panels
+Public panelV        'Incoming voltage from solar panel array
+Public loadA         'Load current pulling for Sap flow probes
+Public dec_time 'holds decimal time used for output
+Public plot 'holds plot number where datalogger is located
+Public trt 'control=1, rainout=2, rainout control=3, irrigation=4
+
+
+'variables for granier probes
+Public granier_mv(48)
+
+
+'declare processing variables
+'Public wind_array(120)
+'Public rain_array(120)
+'Public wind_max, wind_mean
+'Public wind_sum, rain_sum
+Public julian(6)
+Public rise_min
+Public set_min
+Public jd_sum
+Public now
+
+
+'declare control variables
+Dim i,j
+Public unroll_count
+Public rollup_count
+Public met_count 'counter used to keep arrays of rain and wind data
+
+'declare flags
+Public trigger_granier 'initiates measurement of granier probes
+Public trigger_solar_voltage 
+
+Public rTime(9)	'declare as public and dimension rTime to 9
+
+Alias rTime(1) = Year	'assign the alias Year to rTime(1)
+Alias rTime(2) = Month	'assign the alias Month to rTime(2)
+Alias rTime(3) = DDay	'assign the alias Day to rTime(3)
+Alias rTime(4) = Hour	'assign the alias Hour to rTime(4)
+Alias rTime(5) = Minute	'assign the alias Minute to rTime(5)
+Alias rTime(6) = Second	'assign the alias Second to rTime(6)
+Alias rTime(7) = uSecond	'assign the alias uSecond to rTime(7)
+Alias rTime(8) = WeekDay	'assign the alias WeekDay to rTime(8)
+Alias rTime(9) = jd	'assign the alias Day_of_Year to rTime(9)
+
+'set units
+
+'Declare Other Variables
+'Example:
+'Dim Counter
+
+'Declare Constants
+'Example:
+'CONST PI = 3.1415926
+
+
+Const high=true
+Const low=false
+
+
+'Define Data Tables
+'output for soil moisture data
+
+DataTable(all_data,true,-1)
+  DataInterval(0,15,Min,0)
+  'output date/time info, plot id, and treatment code
+  CardOut (0,-1)
+  Sample(1,year,fp2)
+  Sample(1,jd,fp2)
+  Sample(1,dec_time,IEEE4)
+  Sample(1,plot,fp2)
+  Sample(1,trt,fp2)
+      'output granier data
+  Average(48,granier_mv(1),fp2,false)
+   'output battery and solar voltage
+  Sample(1,batt_volt,fp2)
+  Sample(1,converter24_12V,fp2)
+  Sample(1,battbank,fp2)
+  Sample(1,panelV,fp2)
+  Sample(1,loadA,fp2)
+EndTable
+
+
+'Define Subroutines
+
+'Main Program
+'check timing for all measurement types at start of main prog and set
+'flags high for those to be measured.
+
+BeginProg
+  Scan(60,sec,1,0)
+    plot = 1 'change to the appropriate number for each program
+    trt = 1 'change to reflect the treatment as defined in the declaration section
+
+    If IfTime(0,1,min) Then
+      trigger_granier=true
+      trigger_solar_voltage=true
+    EndIf
+    
+    'Calculate time and transitions from day to night
+
+    'get current time from datalogger
+    RealTime(rtime)
+
+    'calculate current time in minutes for comparison to sunrise and sunset times
+    now=(Hour*60)+Minute+(second/60)
+    dec_time=jd+(now/1440)
+    'Code to make measurements
+
+
+    PanelTemp (PTemp,250)
+    Battery (batt_volt)
+    
+   
+   '-------------------------------------------------------------------------------------------------------------
+    'MUX 1
+    'operating in 2 x 32 mode
+    'using differential channel 1 on CR1000
+    
+    'Granier on MUX1
+
+    If trigger_granier=true Then
+      PortSet(2,1) 'set AM16/32 MUX1 reset port high
+     'start Granier measurements on MUX1
+      I=1
+      SubScan(0,msec,32)
+        PortSet(1,1)
+        Delay (0,20,msec)
+        PortSet(1,0)
+        VoltDiff (granier_mv(I),1,mV25,1,True,0,250,1.0,0)
+        I=I+1
+      NextSubScan
+      PortSet(2,0)
+    EndIf
+
+    '-------------------------------------------------------------------------------------------------------------------------------------
+    'MUX2
+    'operating in 2 x 32 mode
+    'using differential channel 2 on CR1000
+    
+      If trigger_granier=true Then
+      PortSet(4,1) 'set AM16/32 MUX2 reset port high
+     'start Granier measurements on MUX2
+      I=33
+      SubScan(0,msec,16)
+        PortSet(3,1)
+        Delay (0,20,msec)
+        PortSet(3,0)
+        VoltDiff (granier_mv(I),1,mV25,2,True,0,250,1.0,0)
+        I=I+1
+      NextSubScan
+      PortSet(4,0)
+    EndIf
+    
+    
+    '-------------------------------------------------------------------------------------------------------------------------------------
+
+' measure solar array voltage at the 24 to 12 volt converter (on the input terminal lug)
+
+ If trigger_solar_voltage=true Then
+      VoltDiff (converter24_12V,1,mV5000,3,True,0,250,1.0,0)
+      VoltSe (battbank,1,mV5000,7,TRUE,0,250,0.01,0)
+      VoltSe (panelV,1,mV5000,8,True,0,250,0.01,0)
+      VoltSe (loadA,1,mV5000,15,True,0,250,0.01,0)
+    EndIf
+
+
+    '-----------------------------------------------------------------------------------------------------------------------------------
+
+    CallTable all_data
+  NextScan
+EndProg
+
