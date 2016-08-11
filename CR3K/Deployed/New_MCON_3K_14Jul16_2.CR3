@@ -1246,15 +1246,16 @@ SlowSequence
  
     ii = 1
     SubScan (0,mSec,4)
+      
 
-      VoltSe (AirTC(ii),1,mV5000,11,TRUE,0,250,0.1,-40)
-      VoltSe (RH(ii),1,mV5000,12,TRUE,0,250,.1,0)
+      VoltSe (AirTC(ii),1,mV5000,1,TRUE,0,250,0.1,-40)
+      VoltSe (RH(ii),1,mV5000,2,TRUE,0,250,.1,0)
       ii =ii + 1    
       PulsePort (8,10000)
      NextSubScan
     
 'if temp/rh not working for this sensor, comment PulsePort below
-     PulsePort (8,10000)
+     'PulsePort (8,10000)
      VoltSe (AirTC(5),1,mV5000,11,TRUE,0,250,0.14,-80)
      VoltDiff (RH(5),1,mV5000,12,TRUE,0,250,.1,0)
 
