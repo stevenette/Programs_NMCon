@@ -418,19 +418,17 @@ Alias par(2)=par_face_down
 Units par = umolm2s
 
 
-Public WS_ms(4)
+Public WS_ms(3)
 Alias WS_ms(1)=WS_ms_4p5
 Alias WS_ms(2)=WS_ms_8p75
 Alias WS_ms(3)=WS_ms_16
-Alias WS_ms(4)=WS_ms_24
 
 
 
-Public WindDir(4)
+Public WindDir(3)
 Alias WindDir(1)=WindDir_4p5
 Alias WindDir(2)=WindDir_8p75
 Alias WindDir(3)=WindDir_16
-Alias WindDir(4)=WindDir_24
 Units WS_ms=m/s
 Units WindDir=Degrees
 
@@ -767,8 +765,8 @@ DataTable (flux,TRUE,FLUX_SIZE_CPU)
   Average (1,e_hmp_mean,IEEE4,FALSE)
   Average (1,e_sat,IEEE4,FALSE)
   Average (1,h2o_hmp_mean,IEEE4,FALSE)
-  Average(4,WS_ms(1),IEEE4,False)
-  Average(4,WindDir(1),IEEE4,False)
+  Average(3,WS_ms(1),IEEE4,False)
+  Average(3,WindDir(1),IEEE4,False)
  
 
 EndTable
@@ -991,7 +989,6 @@ BeginProg
     PulseCount(WS_ms(1),1,1,1,1,0.75,0.2)
     PulseCount(WS_ms(2),1,2,1,1,0.75,0.2)
     PulseCount(WS_ms(3),1,3,1,1,0.75,0.2)
-    PulseCount(WS_ms(4),1,4,1,1,0.75,0.2)
   
    
   
@@ -1000,10 +997,9 @@ BeginProg
     BrHalf(WindDir(1),1,mV5000,23,Vx1,1,5000,True,0,250,355,0)
     BrHalf(WindDir(2),1,mV5000,24,Vx2,1,5000,True,0,250,355,0)
     BrHalf(WindDir(3),1,mV5000,25,Vx3,1,5000,True,0,250,355,0)
-    BrHalf(WindDir(4),1,mV5000,26,Vx4,1,5000,True,0,250,355,0)
 
     
-    For i=1 To 4
+    For i=1 To 3
     If WS_ms(i)<0.21 Then WS_ms(i)=0
     If WindDir(i)>=360 Then WindDir(i)=0
     If WindDir(i)<0 Then WindDir(i)=0
